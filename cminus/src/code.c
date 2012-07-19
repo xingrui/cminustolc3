@@ -1,52 +1,72 @@
 #include "globals.h"
 #include "symtab.h"
 #include "code.h"
-static void cGen(TreeNode * tree, Symtab* symtab);
+static void cGen(TreeNode *tree, Symtab *symtab);
 
-static void genExp(TreeNode * tree, Symtab* symtab) {
+static void genExp(TreeNode *tree, Symtab *symtab)
+{
 	static int s_op = 0;
-	switch (tree->kind.exp) {
-	case AssignK: {
-		SymtabItem* pItem;
+
+	switch (tree->kind.exp)
+	{
+	case AssignK:
+	{
+		SymtabItem *pItem;
 		genExp(tree->child[1], symtab);
 		pItem = st_lookup(symtab, tree->child[0]->attr.name);
-		if (pItem!=NULL) {
-			switch (pItem->p.t) {
+
+		if (pItem != NULL)
+		{
+			switch (pItem->p.t)
+			{
 			case VAR:
-				if (pItem->p.item.intVar.location>-17) {
+
+				if (pItem->p.item.intVar.location > -17)
+				{
 					fprintf(code, "\tSTR R0, R%d, #%d ;%s\n", pItem->scope + 4,
-							pItem->p.item.intVar.location, tree->child[0]->attr.name);
-				} else {
-					int num = -pItem->p.item.intVar.location-1;
+					        pItem->p.item.intVar.location, tree->child[0]->attr.name);
+				}
+				else
+				{
+					int num = -pItem->p.item.intVar.location - 1;
 					l_insert(num);
 					fprintf(code, "\tLD R1, Literal%d\n", num);
 					fprintf(code, "\tNOT R1, R1\n");
-					fprintf(code, "\tADD R1, R%d, R1 ;%s\n", pItem->scope+4,
-							tree->child[0]->attr.name);
+					fprintf(code, "\tADD R1, R%d, R1 ;%s\n", pItem->scope + 4,
+					        tree->child[0]->attr.name);
 					fprintf(code, "\tSTR R0, R1, #0\n");
 				}
+
 				break;
 			case ARRAY:
 				fprintf(code, "\tADD R6, R6, #-1; PUSH\n");
 				fprintf(code, "\tSTR R0, R6, #0; PUSH\n");
-				if (tree->child[0]->child[0]==NULL) {
+
+				if (tree->child[0]->child[0] == NULL)
+				{
 					fprintf(stderr, "error in code generation\n");
 					exit(EXIT_SUCCESS);
 				}
+
 				genExp(tree->child[0]->child[0], symtab);
-				if (pItem->p.item.intVar.location>-17)
+
+				if (pItem->p.item.intVar.location > -17)
 					fprintf(code, "\tADD R1, R%d, #%d ;%s\n", pItem->scope + 4,
-							pItem->p.item.intVar.location, tree->child[0]->attr.name);
-				else {
-					int num = -pItem->p.item.intVar.location-1;
+					        pItem->p.item.intVar.location, tree->child[0]->attr.name);
+				else
+				{
+					int num = -pItem->p.item.intVar.location - 1;
 					l_insert(num);
 					fprintf(code, "\tLD R1, Literal%d\n", num);
 					fprintf(code, "\tNOT R1, R1\n");
 					fprintf(code, "\tADD R1, R%d, R1\n", pItem->scope + 4);
 				}
-				if (pItem->p.item.intVar.location>0) {
+
+				if (pItem->p.item.intVar.location > 0)
+				{
 					fprintf(code, "\tLDR R1, R1, #0\n");
 				}
+
 				fprintf(code, "\tADD R1, R0, R1\n");
 				fprintf(code, "\tLDR R0, R6, #0; POP\n");
 				fprintf(code, "\tADD R6, R6, #1; POP\n");
@@ -56,9 +76,11 @@ static void genExp(TreeNode * tree, Symtab* symtab) {
 				break;
 			}
 		}
+
 		break;
 	}
-	case OpK: {
+	case OpK:
+	{
 		int opNum = s_op++;
 		genExp(tree->child[0], symtab);
 		fprintf(code, "\tADD R6, R6, #-1; PUSH\n");
@@ -66,7 +88,9 @@ static void genExp(TreeNode * tree, Symtab* symtab) {
 		genExp(tree->child[1], symtab);
 		fprintf(code, "\tLDR R1, R6, #0; POP\n");
 		fprintf(code, "\tADD R6, R6, #1; POP\n");
-		switch (tree->attr.op) {
+
+		switch (tree->attr.op)
+		{
 		case PLUS:
 			fprintf(code, "\tADD R0, R0, R1\n");
 			break;
@@ -181,105 +205,142 @@ static void genExp(TreeNode * tree, Symtab* symtab) {
 		default:
 			break;
 		}
+
 		break;
 	}
-	case IdK: {
-		SymtabItem* pItem = st_lookup(symtab, tree->attr.name);
-		if (pItem!=NULL) {
-			switch (pItem->p.t) {
+	case IdK:
+	{
+		SymtabItem *pItem = st_lookup(symtab, tree->attr.name);
+
+		if (pItem != NULL)
+		{
+			switch (pItem->p.t)
+			{
 			case VAR:
-				if (pItem->p.item.intVar.location>-17)
+
+				if (pItem->p.item.intVar.location > -17)
 					fprintf(code, "\tLDR R0, R%d, #%d ;%s\n", pItem->scope + 4,
-							pItem->p.item.intVar.location, tree->attr.name);
-				else {
-					int num = -pItem->p.item.intVar.location-1;
+					        pItem->p.item.intVar.location, tree->attr.name);
+				else
+				{
+					int num = -pItem->p.item.intVar.location - 1;
 					l_insert(num);
 					fprintf(code, "\tLD R1, Literal%d\n", num);
 					fprintf(code, "\tNOT R1, R1\n");
 					fprintf(code, "\tADD R1, R%d, R1 ;%s\n", pItem->scope + 4,
-							tree->attr.name);
+					        tree->attr.name);
 					fprintf(code, "\tLDR R0, R1, #0\n");
 				}
+
 				break;
 			case ARRAY:
-				if (pItem->p.item.intVar.location>-17)
+
+				if (pItem->p.item.intVar.location > -17)
 					fprintf(code, "\tADD R0, R%d, #%d ;%s\n", pItem->scope + 4,
-							pItem->p.item.intVar.location, tree->attr.name);
-				else {
-					int num = -pItem->p.item.intVar.location-1;
+					        pItem->p.item.intVar.location, tree->attr.name);
+				else
+				{
+					int num = -pItem->p.item.intVar.location - 1;
 					l_insert(num);
 					fprintf(code, "\tLD R1, Literal%d\n", num);
 					fprintf(code, "\tNOT R1, R1\n");
 					fprintf(code, "\tADD R0, R%d, R1 ;%s\n", pItem->scope + 4,
-							tree->attr.name);
+					        tree->attr.name);
 				}
-				if (pItem->p.item.intVar.location>0) {
+
+				if (pItem->p.item.intVar.location > 0)
+				{
 					fprintf(code, "\tLDR R0, R0, #0\n");
 				}
+
 				break;
 			default:
 				break;
 			}
 		}
+
 		break;
 	}
-	case ArrayK: {
-		SymtabItem* pItem;
+	case ArrayK:
+	{
+		SymtabItem *pItem;
 		genExp(tree->child[0], symtab);
 		pItem = st_lookup(symtab, tree->attr.name);
-		if (pItem!=NULL) {
-			if (pItem->p.item.intVar.location>-17)
+
+		if (pItem != NULL)
+		{
+			if (pItem->p.item.intVar.location > -17)
 				fprintf(code, "\tADD R1, R%d, #%d ;%s\n", pItem->scope + 4,
-						pItem->p.item.intVar.location, tree->attr.name);
-			else {
-				int num = -pItem->p.item.intVar.location-1;
+				        pItem->p.item.intVar.location, tree->attr.name);
+			else
+			{
+				int num = -pItem->p.item.intVar.location - 1;
 				l_insert(num);
 				fprintf(code, "\tLD R1, Literal%d\n", num);
 				fprintf(code, "\tNOT R1, R1\n");
 				fprintf(code, "\tADD R1, R%d, R1 ;%s\n", pItem->scope + 4,
-						tree->attr.name);
+				        tree->attr.name);
 			}
-			if (pItem->p.item.intVar.location>0) {
+
+			if (pItem->p.item.intVar.location > 0)
+			{
 				fprintf(code, "\tLDR R1, R1, #0\n");
 			}
+
 			fprintf(code, "\tADD R1, R0, R1\n");
 			fprintf(code, "\tLDR R0, R1, #0\n");
 		}
+
 		break;
 	}
-	case ConstK: {
-		if (tree->attr.val<-32768) {
-			fprintf(stderr,"error in code generation.\nNumber Out Of Range\n");
-			exit(EXIT_SUCCESS);
-		} else if (tree->attr.val<-16) {
-			l_insert(-tree->attr.val-1);
-			fprintf(code, "\tLD R0, Literal%d\n", -tree->attr.val-1);
-			fprintf(code, "\tNOT R0, R0\n");
-		} else if (tree->attr.val<16) {
-			fprintf(code, "\tAND R0, R0, #0\n");
-			fprintf(code, "\tADD R0, R0, #%d\n", tree->attr.val);
-		} else if (tree->attr.val<32768) {
-			l_insert(tree->attr.val);
-			fprintf(code, "\tLD R0, Literal%d\n", tree->attr.val);
-		} else {
-			fprintf(stderr,"error in code generation.\nNumber Out Of Range\n");
+	case ConstK:
+	{
+		if (tree->attr.val < -32768)
+		{
+			fprintf(stderr, "error in code generation.\nNumber Out Of Range\n");
 			exit(EXIT_SUCCESS);
 		}
+		else if (tree->attr.val < -16)
+		{
+			l_insert(-tree->attr.val - 1);
+			fprintf(code, "\tLD R0, Literal%d\n", -tree->attr.val - 1);
+			fprintf(code, "\tNOT R0, R0\n");
+		}
+		else if (tree->attr.val < 16)
+		{
+			fprintf(code, "\tAND R0, R0, #0\n");
+			fprintf(code, "\tADD R0, R0, #%d\n", tree->attr.val);
+		}
+		else if (tree->attr.val < 32768)
+		{
+			l_insert(tree->attr.val);
+			fprintf(code, "\tLD R0, Literal%d\n", tree->attr.val);
+		}
+		else
+		{
+			fprintf(stderr, "error in code generation.\nNumber Out Of Range\n");
+			exit(EXIT_SUCCESS);
+		}
+
 		break;
 	}
-	case CallK: {
+	case CallK:
+	{
 		int argNum = 0;
 		TreeNode *t;
 		fprintf(code, "\n\t;Function Call\n");
 		t = tree->child[0];
+
 		//printf("%s\n",tree->attr.name);
-		while (t!=NULL) {
+		while (t != NULL)
+		{
 			genExp(t, symtab);
-			t=t->sibling;
+			t = t->sibling;
 			fprintf(code, "\tADD R6, R6, #-1; PUSH args\n");
 			fprintf(code, "\tSTR R0, R6, #0; PUSH args\n");
 			++argNum;
 		}
+
 		fprintf(code, "\tJSR %s\n", tree->attr.name);
 		fprintf(code, "\tLDR R0, R6, #0\n");
 		fprintf(code, "\tADD R6, R6, #%d\n", argNum + 1);
@@ -288,33 +349,44 @@ static void genExp(TreeNode * tree, Symtab* symtab) {
 		break;
 	}
 }
-static void genStmt(TreeNode * tree, Symtab* symtab) {
+static void genStmt(TreeNode *tree, Symtab *symtab)
+{
 	static int s_if = 0;
 	static int s_while = 0;
-	switch (tree->kind.stmt) {
+
+	switch (tree->kind.stmt)
+	{
 	case ExpStmtK:
 		genExp(tree->child[0], symtab);
 		break;
 	case ComStmtK:
-		if (tree->child[1]!=NULL)
+
+		if (tree->child[1] != NULL)
 			//genStmt(tree->child[1], symtab);
 			genStmt(tree->child[1], tree->attr.symtab);
+
 		break;
-	case SelStmtK: {
+	case SelStmtK:
+	{
 		int ifNum = s_if++;
 		genExp(tree->child[0], symtab);
 		fprintf(code, "\tBRz NOT_TRUE%d\n", ifNum);
 		genStmt(tree->child[1], symtab);
-		if (tree->child[2] != NULL) {
+
+		if (tree->child[2] != NULL)
+		{
 			fprintf(code, "\tBR  ENDELSE%d\n", ifNum);
 			fprintf(code, "NOT_TRUE%d:\n", ifNum);
 			genStmt(tree->child[2], symtab);
 			fprintf(code, "ENDELSE%d: NOP\n", ifNum);
-		} else
+		}
+		else
 			fprintf(code, "NOT_TRUE%d: NOP\n", ifNum);
+
 		break;
 	}
-	case IteStmtK: {
+	case IteStmtK:
+	{
 		int whileNum = s_while++;
 		fprintf(code, "LOOP%d: NOP\n", whileNum);
 		genExp(tree->child[0], symtab);
@@ -331,40 +403,55 @@ static void genStmt(TreeNode * tree, Symtab* symtab) {
 	default:
 		;
 	}
-	if (tree->sibling != NULL) {
+
+	if (tree->sibling != NULL)
+	{
 		genStmt(tree->sibling, symtab);
 	}
 }
 
-void cGen(TreeNode * tree, Symtab* symtab) {
-	if (tree != NULL) {
-		switch (tree->nodeKind) {
-		//		case StmtK:
-		//			printf("cGen:StmtK\n");
-		//			genStmt(tree, symtab);
-		//			break;
-		//		case ExpK:
-		//			printf("cGen:ExpK\n");
-		//			genExp(tree, symtab);
-		//			break;
+void cGen(TreeNode *tree, Symtab *symtab)
+{
+	if (tree != NULL)
+	{
+		switch (tree->nodeKind)
+		{
+			//		case StmtK:
+			//			printf("cGen:StmtK\n");
+			//			genStmt(tree, symtab);
+			//			break;
+			//		case ExpK:
+			//			printf("cGen:ExpK\n");
+			//			genExp(tree, symtab);
+			//			break;
 		case DeclK:
-			switch (tree->kind.decl) {
-			case FunDecK: {
+
+			switch (tree->kind.decl)
+			{
+			case FunDecK:
+			{
 				SymtabItem *pItem = st_lookup(symtab, tree->attr.name);
-				if (pItem != NULL) {
-					Symtab * s;
+
+				if (pItem != NULL)
+				{
+					Symtab *s;
 					//printf("fun name is %s\n", tree->attr.name);
 					fprintf(code, "%s:\n", tree->attr.name);
-					if (strcmp(tree->attr.name, "main")) {
+
+					if (strcmp(tree->attr.name, "main"))
+					{
 						fprintf(code, "\tADD R6, R6, #-2\n");
 						fprintf(code, "\tSTR R7, R6, #0\n");
 						fprintf(code, "\tADD R6, R6, #-1\n");
 						fprintf(code, "\tSTR R5, R6, #0\n");
 						fprintf(code, "\tADD R5, R6, #-1\n");
 					}
+
 					s = pItem->p.item.fun.symtab;
+
 					//allocate space for local variable...
-					if (-s->offset>15) {
+					if (-s->offset > 15)
+					{
 						l_insert(-s->offset);
 						fprintf(code, "\tLD R1, Literal%d\n", -s->offset);
 						fprintf(code, "\tNOT R1,R1\n");
@@ -373,14 +460,17 @@ void cGen(TreeNode * tree, Symtab* symtab) {
 						genStmt(tree->child[2], s);
 						fprintf(code, "\tLD R1, Literal%d\n", -s->offset);
 						fprintf(code, "\tADD R6, R6, R1\n");
-					} else {
+					}
+					else
+					{
 						fprintf(code, "\tADD R6, R6, #%d\n", s->offset);
 						//statement-list of compound-stmt
 						genStmt(tree->child[2], s);
 						fprintf(code, "\tADD R6, R6, #%d\n", -s->offset);
-
 					}
-					if (strcmp(tree->attr.name, "main")) {
+
+					if (strcmp(tree->attr.name, "main"))
+					{
 						fprintf(code, "\tLDR R5, R6, #0\n");
 						fprintf(code, "\tADD R6, R6, #1\n");
 						fprintf(code, "\tLDR R7, R6, #0\n");
@@ -388,44 +478,57 @@ void cGen(TreeNode * tree, Symtab* symtab) {
 						fprintf(code, "\tRET\n");
 					}
 				}
+
 				break;
 			}
 			default:
 				break;
 			}
+
 		default:
 			break;
 		}
+
 		cGen(tree->sibling, symtab);
 	}
 }
 
-void output() {
+void output()
+{
 	char lineBuf[100];
-	FILE* out = fopen("io/output.asm", "r");
-	while (fgets(lineBuf, 100, out)) {
+	FILE *out = fopen("io/output.asm", "r");
+
+	while (fgets(lineBuf, 100, out))
+	{
 		fprintf(code, "%s", lineBuf);
 	}
 }
 
-void input() {
+void input()
+{
 	char lineBuf[100];
-	FILE* out = fopen("io/input.asm", "r");
-	while (fgets(lineBuf, 100, out)) {
+	FILE *out = fopen("io/input.asm", "r");
+
+	while (fgets(lineBuf, 100, out))
+	{
 		fprintf(code, "%s", lineBuf);
 	}
 }
 
-void addLiteral() {
-	extern Literal* literal;
-	LiteralItem*p = literal->first;
-	while (p) {
+void addLiteral()
+{
+	extern Literal *literal;
+	LiteralItem *p = literal->first;
+
+	while (p)
+	{
 		fprintf(code, "Literal%d: .FILL #%d\n", p->num, p->num);
-		p=p->next;
+		p = p->next;
 	}
 }
 
-void codeGen(TreeNode* syntaxTree, Symtab* symtab) {
+void codeGen(TreeNode *syntaxTree, Symtab *symtab)
+{
 	fprintf(code, "\t.ORIG x3000\n");
 	fprintf(code, "\tLEA R6, #-200\n");
 	fprintf(code, "\tADD R5, R6, #-1\n");
