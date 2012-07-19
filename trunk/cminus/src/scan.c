@@ -26,53 +26,68 @@ char tokenString[MAXTOKENLEN + 1];
 static char lineBuf[BUFLEN]; /* holds the current line */
 static int linepos = 0; /* current position in LineBuf */
 static int bufsize = 0; /* current size of buffer string */
-static int EOF_flag= FALSE; /* corrects ungetNextChar behavior on EOF */
+static int EOF_flag = FALSE; /* corrects ungetNextChar behavior on EOF */
 
 /* getNextChar fetches the next non-blank character
  from lineBuf, reading in a new line if lineBuf is
  exhausted */
-static int getNextChar(void) {
-	if (!(linepos < bufsize)) {
+static int getNextChar(void)
+{
+	if (!(linepos < bufsize))
+	{
 		lineno++;
-		if (fgets(lineBuf, BUFLEN-1, source)) {
+
+		if (fgets(lineBuf, BUFLEN - 1, source))
+		{
 			if (EchoSource)
 				fprintf(listing, "%4d: %s", lineno, lineBuf);
+
 			bufsize = strlen(lineBuf);
 			linepos = 0;
 			return lineBuf[linepos++];
-		} else {
+		}
+		else
+		{
 			EOF_flag = TRUE;
 			return EOF;
 		}
-	} else
+	}
+	else
 		return lineBuf[linepos++];
 }
 
 /* ungetNextChar backtracks one character
  in lineBuf */
-static void ungetNextChar(void) {
+static void ungetNextChar(void)
+{
 	if (!EOF_flag)
 		linepos--;
 }
 
 /* lookup table of reserved words */
-static struct {
-	char* str;
+static struct
+{
+	char *str;
 	TokenType tok;
-} reservedWords[MAXRESERVED]= { { "if", IF }, { "else", ELSE }, { "int", INT },
-		{ "return", RETURN }, { "void", VOID }, { "while", WHILE }, };
+} reservedWords[MAXRESERVED] = { { "if", IF }, { "else", ELSE }, { "int", INT },
+	{ "return", RETURN }, { "void", VOID }, { "while", WHILE },
+};
 
 /* lookup an identifier to see if it is a reserved word */
 /* uses linear search */
-static TokenType reservedLookup(char * s) {
+static TokenType reservedLookup(char *s)
+{
 	int i;
-	for (i=0; i<MAXRESERVED; i++)
+
+	for (i = 0; i < MAXRESERVED; i++)
 		if (!strcmp(s, reservedWords[i].str))
 			return reservedWords[i].tok;
+
 	return ID;
 }
 
-TokenType getToken(void) {
+TokenType getToken(void)
+{
 	/* index for storing into tokenString */
 	int tokenStringIndex = 0;
 	/* holds current token to be returned */
@@ -81,11 +96,16 @@ TokenType getToken(void) {
 	StateType state = START;
 	/* flag to indicate save to tokenString */
 	int save;
-	while (state != DONE) {
+
+	while (state != DONE)
+	{
 		int c = getNextChar();
 		save = TRUE;
-		switch (state) {
+
+		switch (state)
+		{
 		case START:
+
 			if (isdigit(c))
 				state = INNUM;
 			else if (isalpha(c))
@@ -100,11 +120,14 @@ TokenType getToken(void) {
 				state = INEQUAL;
 			else if (c == '/')
 				state = INOVER;
-			else if ((c == ' ') || (c == '\t')|| (c == '\n'))
+			else if ((c == ' ') || (c == '\t') || (c == '\n'))
 				save = FALSE;
-			else {
+			else
+			{
 				state = DONE;
-				switch (c) {
+
+				switch (c)
+				{
 				case EOF:
 					save = FALSE;
 					currentToken = ENDFILE;
@@ -147,105 +170,156 @@ TokenType getToken(void) {
 					break;
 				}
 			}
+
 			break;
 		case INNUM:
-			if (!isdigit(c)) { /* backup in the input */
+
+			if (!isdigit(c))   /* backup in the input */
+			{
 				ungetNextChar();
 				save = FALSE;
 				state = DONE;
 				currentToken = NUM;
 			}
+
 			break;
 		case INID:
-			if (!isalpha(c)) { /* backup in the input */
+
+			if (!isalpha(c))   /* backup in the input */
+			{
 				ungetNextChar();
 				save = FALSE;
 				state = DONE;
 				currentToken = ID;
 			}
+
 			break;
 		case INLESS:
 			state = DONE;
-			if (c == '=') {
+
+			if (c == '=')
+			{
 				currentToken = LESSEQUAL;
-			} else {
+			}
+			else
+			{
 				ungetNextChar();
 				save = FALSE;
 				currentToken = LESS;
 			}
+
 			break;
 		case INMORE:
 			state = DONE;
-			if (c == '=') {
+
+			if (c == '=')
+			{
 				currentToken = MOREEQUAL;
-			} else {
+			}
+			else
+			{
 				ungetNextChar();
 				save = FALSE;
 				currentToken = MORE;
 			}
+
 			break;
 		case INEQUAL:
 			state = DONE;
-			if (c == '=') {
+
+			if (c == '=')
+			{
 				currentToken = EQUAL;
-			} else {
+			}
+			else
+			{
 				ungetNextChar();
 				save = FALSE;
 				currentToken = ASSIGN;
 			}
+
 			break;
 		case INUNEQUAL:
 			state = DONE;
-			if (c == '=') {
+
+			if (c == '=')
+			{
 				currentToken = UNEQUAL;
-			} else {
+			}
+			else
+			{
 				ungetNextChar();
 				save = FALSE;
 				currentToken = ERROR;
 			}
+
 			break;
 		case INOVER:
-			if (c == '/') {
+
+			if (c == '/')
+			{
 				state = INCOMMENT;
 				save = FALSE;
-			} else if (c == '*') {
+			}
+			else if (c == '*')
+			{
 				state = INSTARCOMMENT;
 				save = FALSE;
-			} else {
+			}
+			else
+			{
 				state = DONE;
 				ungetNextChar();
 				save = FALSE;
 				currentToken = OVER;
 			}
+
 			break;
 		case ENDSTARCOMMENT:
-			if (c == '/') {
+
+			if (c == '/')
+			{
 				save = FALSE;
 				tokenStringIndex = 0;
 				state = START;
-			} else if (c == '*') {
+			}
+			else if (c == '*')
+			{
 				save = FALSE;
-			} else {
+			}
+			else
+			{
 				save = FALSE;
 				state = INSTARCOMMENT;
 			}
+
 			break;
 		case INSTARCOMMENT:
-			if (c != '*') {
+
+			if (c != '*')
+			{
 				save = FALSE;
-			} else {
+			}
+			else
+			{
 				state = ENDSTARCOMMENT;
 				save = FALSE;
 			}
+
 			break;
 		case INCOMMENT:
-			if (c != '\n') {
+
+			if (c != '\n')
+			{
 				save = FALSE;
-			} else {
+			}
+			else
+			{
 				save = FALSE;
 				tokenStringIndex = 0;
 				state = START;
 			}
+
 			break;
 		case DONE:
 		default: /* should never happen */
@@ -254,17 +328,24 @@ TokenType getToken(void) {
 			currentToken = ERROR;
 			break;
 		}
+
 		if ((save) && (tokenStringIndex <= MAXTOKENLEN))
 			tokenString[tokenStringIndex++] = (char) c;
-		if (state == DONE) {
+
+		if (state == DONE)
+		{
 			tokenString[tokenStringIndex] = '\0';
+
 			if (currentToken == ID)
 				currentToken = reservedLookup(tokenString);
 		}
 	}
-	if (TraceScan) {
+
+	if (TraceScan)
+	{
 		fprintf(listing, "\t%d: ", lineno);
 		printToken(currentToken, tokenString);
 	}
+
 	return currentToken;
 }

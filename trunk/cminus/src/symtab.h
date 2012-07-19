@@ -2,16 +2,17 @@
 #define SYMTAB_H_
 #include "globals.h"
 
-typedef struct SParam {
+typedef struct SParam
+{
 	char *name;
 	ParamKind paramType;
 	int location;
-	struct SParam * next;
+	struct SParam *next;
 } Param;
 
 typedef enum
 {
-	VAR = 0,ARRAY = 1,FUN = 2,UNKNOWN = 3
+	VAR = 0, ARRAY = 1, FUN = 2, UNKNOWN = 3
 } DecType;
 
 typedef enum
@@ -19,12 +20,14 @@ typedef enum
 	GLOBAL = 0, LOCAL = 1
 } Scope;
 
-typedef struct {
+typedef struct
+{
 	char *name;
 	int location;
 } IntVar;
 
-typedef struct {
+typedef struct
+{
 	char *name;
 	int location;
 	int size;
@@ -32,47 +35,54 @@ typedef struct {
 
 struct SSymtab;
 
-typedef struct {
+typedef struct
+{
 	char *name;
 	SpecKind retType;
-	Param * first;
-	struct SSymtab * symtab;
+	Param *first;
+	struct SSymtab *symtab;
 } Fun;
 
-typedef struct {
+typedef struct
+{
 	DecType t;
-	union{
+	union
+	{
 		IntVar intVar;
 		ArrayVar arrayVar;
 		Fun fun;
-	}item;
+	} item;
 } DeclItem;
 
-typedef struct SSymtabItem {
+typedef struct SSymtabItem
+{
 	DeclItem p;
 	Scope scope;
 	struct SSymtabItem *next;
 } SymtabItem;
 
-typedef struct SSymtab {
-	SymtabItem * first;
+typedef struct SSymtab
+{
+	SymtabItem *first;
 	Scope scope;
-	struct SSymtab * parent;
+	struct SSymtab *parent;
 	int offset;
 } Symtab;
 
-Symtab* CreateNewSymtab();
-int st_insert(Symtab* symtab, DeclItem declItem);
-SymtabItem* st_lookup(Symtab* symtab, char *name);
-void printSymtab(Symtab* symtab);
-Symtab* buildSymtab(TreeNode *);
+Symtab *CreateNewSymtab();
+int st_insert(Symtab *symtab, DeclItem declItem);
+SymtabItem *st_lookup(Symtab *symtab, char *name);
+void printSymtab(Symtab *symtab);
+Symtab *buildSymtab(TreeNode *);
 
-typedef struct SLiteralItem {
+typedef struct SLiteralItem
+{
 	int num;
 	struct SLiteralItem *next;
 } LiteralItem;
 
-typedef struct SLiteral {
+typedef struct SLiteral
+{
 	LiteralItem *first;
 } Literal;
 

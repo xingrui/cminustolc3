@@ -1,8 +1,10 @@
 #include "globals.h"
 #include "util.h"
 
-void printToken(TokenType token, const char* tokenString) {
-	switch (token) {
+void printToken(TokenType token, const char *tokenString)
+{
+	switch (token)
+	{
 	case IF:
 	case ELSE:
 	case INT:
@@ -85,95 +87,125 @@ void printToken(TokenType token, const char* tokenString) {
 	}
 }
 
-char * copyString(char * s) {
+char *copyString(char *s)
+{
 	int n;
-	char * t;
-	if (s==NULL)
+	char *t;
+
+	if (s == NULL)
 		return NULL;
-	n = strlen(s)+1;
+
+	n = strlen(s) + 1;
 	t = malloc(n);
-	if (t==NULL)
+
+	if (t == NULL)
 		fprintf(listing, "Out of memory error at line %d\n", lineno);
 	else
 		strcpy(t, s);
+
 	return t;
 }
 
-TreeNode * newDeclNode(void) {
-	TreeNode * t = (TreeNode *) malloc(sizeof(TreeNode));
+TreeNode *newDeclNode(void)
+{
+	TreeNode *t = (TreeNode *) malloc(sizeof(TreeNode));
 	int i;
-	if (t==NULL)
+
+	if (t == NULL)
 		fprintf(listing, "Out of memory error at line %d\n", lineno);
-	else {
-		for (i=0; i<MAXCHILDREN; i++)
+	else
+	{
+		for (i = 0; i < MAXCHILDREN; i++)
 			t->child[i] = NULL;
+
 		t->sibling = NULL;
 		t->nodeKind = DeclK;
 		t->lineno = lineno;
 	}
+
 	return t;
 }
 
-TreeNode * newSpecNode(SpecKind spec) {
-	TreeNode * t = (TreeNode *)malloc(sizeof(TreeNode));
+TreeNode *newSpecNode(SpecKind spec)
+{
+	TreeNode *t = (TreeNode *)malloc(sizeof(TreeNode));
 	int i;
-	if (t==NULL)
+
+	if (t == NULL)
 		fprintf(listing, "Out of memory error at line %d\n", lineno);
-	else {
-		for (i=0; i<MAXCHILDREN; i++)
+	else
+	{
+		for (i = 0; i < MAXCHILDREN; i++)
 			t->child[i] = NULL;
+
 		t->sibling = NULL;
 		t->nodeKind = SpecK;
 		t->kind.spec = spec;
 		t->lineno = lineno;
 	}
+
 	return t;
 }
 
-TreeNode * newParamNode(void) {
-	TreeNode * t = (TreeNode *)malloc(sizeof(TreeNode));
+TreeNode *newParamNode(void)
+{
+	TreeNode *t = (TreeNode *)malloc(sizeof(TreeNode));
 	int i;
-	if (t==NULL)
+
+	if (t == NULL)
 		fprintf(listing, "Out of memory error at line %d\n", lineno);
-	else {
-		for (i=0; i<MAXCHILDREN; i++)
+	else
+	{
+		for (i = 0; i < MAXCHILDREN; i++)
 			t->child[i] = NULL;
+
 		t->sibling = NULL;
 		t->nodeKind = ParamK;
 		t->lineno = lineno;
 	}
+
 	return t;
 }
 
-TreeNode * newExpNode(ExpKind kind) {
-	TreeNode * t = (TreeNode *) malloc(sizeof(TreeNode));
+TreeNode *newExpNode(ExpKind kind)
+{
+	TreeNode *t = (TreeNode *) malloc(sizeof(TreeNode));
 	int i;
-	if (t==NULL)
+
+	if (t == NULL)
 		fprintf(listing, "Out of memory error at line %d\n", lineno);
-	else {
-		for (i=0; i<MAXCHILDREN; i++)
+	else
+	{
+		for (i = 0; i < MAXCHILDREN; i++)
 			t->child[i] = NULL;
+
 		t->sibling = NULL;
 		t->nodeKind = ExpK;
 		t->kind.exp = kind;
 		t->lineno = lineno;
 	}
+
 	return t;
 }
 
-TreeNode * newStmtNode(StmtKind kind) {
-	TreeNode * t = (TreeNode *) malloc(sizeof(TreeNode));
+TreeNode *newStmtNode(StmtKind kind)
+{
+	TreeNode *t = (TreeNode *) malloc(sizeof(TreeNode));
 	int i;
-	if (t==NULL)
+
+	if (t == NULL)
 		fprintf(listing, "Out of memory error at line %d\n", lineno);
-	else {
-		for (i=0; i<MAXCHILDREN; i++)
+	else
+	{
+		for (i = 0; i < MAXCHILDREN; i++)
 			t->child[i] = NULL;
+
 		t->sibling = NULL;
 		t->nodeKind = StmtK;
 		t->kind.stmt = kind;
 		t->lineno = lineno;
 	}
+
 	return t;
 }
 
@@ -181,19 +213,27 @@ static int indentno = 0;
 #define INDENT indentno+=2
 #define UNINDENT indentno-=2
 
-static void printSpaces(void) {
+static void printSpaces(void)
+{
 	int i;
-	for (i=0; i<indentno; i++)
+
+	for (i = 0; i < indentno; i++)
 		fprintf(listing, " ");
 }
 
-void printTree(TreeNode * tree) {
+void printTree(TreeNode *tree)
+{
 	int i;
 	INDENT;
-	while (tree != NULL) {
+
+	while (tree != NULL)
+	{
 		printSpaces();
-		if (tree->nodeKind == DeclK) {
-			switch (tree->kind.decl) {
+
+		if (tree->nodeKind == DeclK)
+		{
+			switch (tree->kind.decl)
+			{
 			case VarDecK:
 				fprintf(listing, "VarDec: %s\n", tree->attr.name);
 				break;
@@ -207,8 +247,11 @@ void printTree(TreeNode * tree) {
 				fprintf(listing, "Unknown DeclKind kind\n");
 				break;
 			}
-		} else if (tree->nodeKind==StmtK) {
-			switch (tree->kind.stmt) {
+		}
+		else if (tree->nodeKind == StmtK)
+		{
+			switch (tree->kind.stmt)
+			{
 			case SelStmtK:
 				fprintf(listing, "Sel\n");
 				break;
@@ -228,8 +271,11 @@ void printTree(TreeNode * tree) {
 				fprintf(listing, "Unknown StmtNode kind\n");
 				break;
 			}
-		} else if (tree->nodeKind==ExpK) {
-			switch (tree->kind.exp) {
+		}
+		else if (tree->nodeKind == ExpK)
+		{
+			switch (tree->kind.exp)
+			{
 			case AssignK:
 				fprintf(listing, "Assign:\n");
 				break;
@@ -253,8 +299,11 @@ void printTree(TreeNode * tree) {
 				fprintf(listing, "Unknown ExpNode kind\n");
 				break;
 			}
-		} else if (tree->nodeKind == SpecK) {
-			switch (tree->kind.spec) {
+		}
+		else if (tree->nodeKind == SpecK)
+		{
+			switch (tree->kind.spec)
+			{
 			case IntSpec:
 				fprintf(listing, "Int\n");
 				break;
@@ -265,8 +314,11 @@ void printTree(TreeNode * tree) {
 				fprintf(listing, "Unknown SpecNode kind\n");
 				break;
 			}
-		} else if (tree->nodeKind == ParamK) {
-			switch (tree->kind.param) {
+		}
+		else if (tree->nodeKind == ParamK)
+		{
+			switch (tree->kind.param)
+			{
 			case IntPaK:
 				fprintf(listing, "IntPa: %s\n", tree->attr.name);
 				break;
@@ -280,11 +332,15 @@ void printTree(TreeNode * tree) {
 				fprintf(listing, "Unknown ParamNode kind\n");
 				break;
 			}
-		} else
+		}
+		else
 			fprintf(listing, "Unknown node kind\n");
-		for (i=0; i<MAXCHILDREN; i++)
+
+		for (i = 0; i < MAXCHILDREN; i++)
 			printTree(tree->child[i]);
+
 		tree = tree->sibling;
 	}
+
 	UNINDENT;
 }
