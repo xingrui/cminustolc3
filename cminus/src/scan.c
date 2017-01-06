@@ -120,7 +120,7 @@ TokenType getToken(void)
 				state = INEQUAL;
 			else if (c == '/')
 				state = INOVER;
-			else if ((c == ' ') || (c == '\t') || (c == '\n'))
+			else if ((c == ' ') || (c == '\t') || (c == '\n') || (c == '\r'))
 				save = FALSE;
 			else
 			{
