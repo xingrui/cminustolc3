@@ -15,7 +15,7 @@ FILE *code;
 int EchoSource = FALSE;
 int TraceScan = FALSE;
 int TraceParse = FALSE;
-int TraceAnalyze = TRUE;
+int TraceAnalyze = FALSE;
 int TraceCode = FALSE;
 
 int main(int argc, char *argv[])
